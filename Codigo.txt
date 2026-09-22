@@ -68,7 +68,7 @@ class TaskManager:
         new_task = Task(new_id, description, priority)
         self.tasks.append(new_task)
         self.save_tasks()
-        print(f"\n✅ Tarefa '{description}' adicionada com sucesso!")
+        print(f"\n Tarefa '{description}' adicionada com sucesso!")
 
     def list_tasks(self, filter_status=None):
         """Lista as tarefas, permitindo filtrar por pendentes ou concluídas."""
@@ -96,13 +96,13 @@ class TaskManager:
         for task in self.tasks:
             if task.task_id == task_id:
                 if task.completed:
-                    print(f"\n⚠️ A tarefa {task_id} já estava concluída.")
+                    print(f"\n A tarefa {task_id} já estava concluída.")
                     return
                 task.mark_completed()
                 self.save_tasks()
-                print(f"\n✅ Tarefa {task_id} marcada como concluída!")
+                print(f"\n Tarefa {task_id} marcada como concluída!")
                 return
-        print(f"\n❌ Tarefa com ID {task_id} não encontrada.")
+        print(f"\n Tarefa com ID {task_id} não encontrada.")
 
     def remove_task(self, task_id):
         """Busca uma tarefa por ID e a remove da lista."""
@@ -110,9 +110,9 @@ class TaskManager:
             if task.task_id == task_id:
                 del self.tasks[i]
                 self.save_tasks()
-                print(f"\n✅ Tarefa {task_id} removida com sucesso!")
+                print(f"\n Tarefa {task_id} removida com sucesso!")
                 return
-        print(f"\n❌ Tarefa com ID {task_id} não encontrada.")
+        print(f"\n Tarefa com ID {task_id} não encontrada.")
 
 
 def main():
@@ -120,7 +120,7 @@ def main():
     manager = TaskManager()
     
     while True:
-        print("\n=== 📝 SISTEMA TODO ===")
+        print("\n=== SISTEMA TODO ===")
         print("1. Adicionar nova tarefa")
         print("2. Listar TODAS as tarefas")
         print("3. Listar tarefas PENDENTES")
@@ -152,21 +152,21 @@ def main():
                 tid = int(input("Digite o ID da tarefa para concluir: "))
                 manager.mark_completed(tid)
             except ValueError:
-                print("\n❌ Por favor, digite um número ID válido.")
+                print("\n Por favor, digite um número ID válido.")
                 
         elif escolha == '6':
             try:
                 tid = int(input("Digite o ID da tarefa para remover: "))
                 manager.remove_task(tid)
             except ValueError:
-                print("\n❌ Por favor, digite um número ID válido.")
+                print("\n Por favor, digite um número ID válido.")
                 
         elif escolha == '0':
-            print("\nSalvando alterações e saindo do sistema... Até logo! 👋")
+            print("\nSalvando alterações e saindo do sistema... Até logo!")
             break
             
         else:
-            print("\n❌ Opção inválida. Tente novamente.")
+            print("\n Opção inválida. Tente novamente.")
 
 if __name__ == "__main__":
     main()
