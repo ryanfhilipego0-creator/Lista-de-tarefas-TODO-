@@ -1,0 +1,172 @@
+import json
+import os
+
+class Task:
+    """
+    Classe que representa uma tarefa individual.
+    Demonstra o encapsulamento de atributos de uma tarefa.
+    """
+    def __init__(self, task_id, description, priority="Normal", completed=False):
+        self.task_id = task_id
+        self.description = description
+        self.priority = priority
+        self.completed = completed
+
+    def mark_completed(self):
+        """Método para alterar o estado da tarefa."""
+        self.completed = True
+
+    def to_dict(self):
+        """Converte o objeto em um dicionário para facilitar a persistência em JSON."""
+        return {
+            "task_id": self.task_id,
+            "description": self.description,
+            "priority": self.priority,
+            "completed": self.completed
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        """Método de classe para criar um objeto Task a partir de um dicionário."""
+        return cls(data["task_id"], data["description"], data["priority"], data["completed"])
+
+    def __str__(self):
+        """Representação em string do objeto para exibição no terminal."""
+        status = "[X]" if self.completed else "[ ]"
+        return f"{self.task_id:02d} - {status} {self.description} (Prioridade: {self.priority})"
+
+
+class TaskManager:
+    """
+    Classe responsável por gerenciar a coleção de tarefas.
+    Aplica os conceitos de agregação e manipulação de arquivos.
+    """
+    def __init__(self, filename="tasks.json"):
+        self.filename = filename
+        self.tasks = []
+        self.load_tasks()
+
+    def load_tasks(self):
+        """Lê os dados persistidos no arquivo JSON e recria os objetos Task."""
+        if os.path.exists(self.filename):
+            with open(self.filename, 'r', encoding='utf-8') as file:
+                try:
+                    data = json.load(file)
+                    self.tasks = [Task.from_dict(task_data) for task_data in data]
+                except json.JSONDecodeError:
+                    self.tasks = []
+
+    def save_tasks(self):
+        """Salva a lista de objetos Task no arquivo JSON."""
+        with open(self.filename, 'w', encoding='utf-8') as file:
+            data = [task.to_dict() for task in self.tasks]
+            json.dump(data, file, indent=4, ensure_ascii=False)
+
+    def add_task(self, description, priority="Normal"):
+        """Adiciona uma nova tarefa gerando um ID incremental."""
+        new_id = 1 if not self.tasks else max(t.task_id for t in self.tasks) + 1
+        new_task = Task(new_id, description, priority)
+        self.tasks.append(new_task)
+        self.save_tasks()
+        print(f"\n✅ Tarefa '{description}' adicionada com sucesso!")
+
+    def list_tasks(self, filter_status=None):
+        """Lista as tarefas, permitindo filtrar por pendentes ou concluídas."""
+        if not self.tasks:
+            print("\nNenhuma tarefa cadastrada.")
+            return
+
+        print("\n--- Lista de Tarefas ---")
+        found = False
+        for task in self.tasks:
+            if filter_status == "pendente" and task.completed:
+                continue
+            if filter_status == "concluida" and not task.completed:
+                continue
+            
+            print(task)
+            found = True
+            
+        if not found:
+            print("Nenhuma tarefa corresponde a este filtro.")
+        print("------------------------")
+
+    def mark_completed(self, task_id):
+        """Busca uma tarefa por ID e a marca como concluída."""
+        for task in self.tasks:
+            if task.task_id == task_id:
+                if task.completed:
+                    print(f"\n⚠️ A tarefa {task_id} já estava concluída.")
+                    return
+                task.mark_completed()
+                self.save_tasks()
+                print(f"\n✅ Tarefa {task_id} marcada como concluída!")
+                return
+        print(f"\n❌ Tarefa com ID {task_id} não encontrada.")
+
+    def remove_task(self, task_id):
+        """Busca uma tarefa por ID e a remove da lista."""
+        for i, task in enumerate(self.tasks):
+            if task.task_id == task_id:
+                del self.tasks[i]
+                self.save_tasks()
+                print(f"\n✅ Tarefa {task_id} removida com sucesso!")
+                return
+        print(f"\n❌ Tarefa com ID {task_id} não encontrada.")
+
+
+def main():
+    """Loop principal que controla a Interface de Linha de Comando (CLI)."""
+    manager = TaskManager()
+    
+    while True:
+        print("\n=== 📝 SISTEMA TODO ===")
+        print("1. Adicionar nova tarefa")
+        print("2. Listar TODAS as tarefas")
+        print("3. Listar tarefas PENDENTES")
+        print("4. Listar tarefas CONCLUÍDAS")
+        print("5. Marcar tarefa como concluída")
+        print("6. Remover tarefa")
+        print("0. Sair")
+        
+        escolha = input("\nEscolha uma opção: ")
+        
+        if escolha == '1':
+            desc = input("Descrição da tarefa: ")
+            pri = input("Nível de Prioridade (Alta/Normal/Baixa) [Normal]: ")
+            if not pri.strip():
+                pri = "Normal"
+            manager.add_task(desc, pri.capitalize())
+            
+        elif escolha == '2':
+            manager.list_tasks()
+            
+        elif escolha == '3':
+            manager.list_tasks(filter_status="pendente")
+            
+        elif escolha == '4':
+            manager.list_tasks(filter_status="concluida")
+            
+        elif escolha == '5':
+            try:
+                tid = int(input("Digite o ID da tarefa para concluir: "))
+                manager.mark_completed(tid)
+            except ValueError:
+                print("\n❌ Por favor, digite um número ID válido.")
+                
+        elif escolha == '6':
+            try:
+                tid = int(input("Digite o ID da tarefa para remover: "))
+                manager.remove_task(tid)
+            except ValueError:
+                print("\n❌ Por favor, digite um número ID válido.")
+                
+        elif escolha == '0':
+            print("\nSalvando alterações e saindo do sistema... Até logo! 👋")
+            break
+            
+        else:
+            print("\n❌ Opção inválida. Tente novamente.")
+
+if __name__ == "__main__":
+    main()
